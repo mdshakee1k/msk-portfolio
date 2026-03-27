@@ -7,8 +7,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Escape HTML to prevent XSS attacks
 function escapeHtml(text: string): string {
   const map: { [key: string]: string } = {
@@ -31,6 +29,16 @@ function validate(d: Record<string, unknown>) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Initialize Resend at runtime (not build time)
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json(
+        { success: false, errors: ["RESEND_API_KEY is not configured"] },
+        { status: 500 }
+      );
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     const body   = await req.json();
     const errors = validate(body);
     if (errors.length) return NextResponse.json({ success: false, errors }, { status: 400 });
