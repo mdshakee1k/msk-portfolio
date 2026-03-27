@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────────
 
 import { NextRequest } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, type GenerateContentStreamResult } from "@google/generative-ai";
 import { PORTFOLIO_KNOWLEDGE } from "@/lib/knowledge";
 
 if (!process.env.GEMINI_API_KEY) {
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
             new Promise((_, reject) =>
               setTimeout(() => reject(new Error("API timeout")), RESPONSE_TIMEOUT)
             ),
-          ]);
+          ]) as GenerateContentStreamResult;
 
           for await (const chunk of response.stream) {
             const text = chunk.text();
