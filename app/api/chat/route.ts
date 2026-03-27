@@ -10,12 +10,6 @@ import { NextRequest } from "next/server";
 import { GoogleGenerativeAI, type GenerateContentStreamResult } from "@google/generative-ai";
 import { PORTFOLIO_KNOWLEDGE } from "@/lib/knowledge";
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY environment variable is not set. Add it to .env.local");
-}
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 const SYSTEM = `
 You are the portfolio assistant for Mohammed Shakeel K.
 Answer ONLY from the knowledge base below. Be concise, warm, and professional.
@@ -41,6 +35,16 @@ const RESPONSE_TIMEOUT = 15000; // 15 seconds (Gemini should respond within this
 
 export async function POST(req: NextRequest) {
   try {
+    // Validate API key at runtime (not build time)
+    if (!process.env.GEMINI_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "GEMINI_API_KEY is not configured. Please set it in environment variables." }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
     const body    = await req.json();
     const messages = validate(body.messages);
     if (!messages.length) return new Response("No messages", { status: 400 });
